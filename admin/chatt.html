@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Umum</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      
+      .chat-header {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: #2e6f6b;
+        color: white;
+      }
+      
+      .avatar {
+        background: white;
+        color: #2e6f6b;
+        font-weight: bold;
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        margin-right: 10px;
+      }
+      
+      .user-info {
+        line-height: 1.2;
+      }
+      
+      .chat-box {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .chat-message {
+        max-width: 75%;
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #e4e6eb;
+        position: relative;
+      }
+      
+      .chat-left {
+        align-self: flex-start;
+        background: #ffffff;
+      }
+      
+      .chat-right {
+        align-self: flex-end;
+        background: #dcf8c6;
+      }
+      
+      .chat-meta {
+        font-size: 0.75em;
+        color: gray;
+        margin-top: 5px;
+      }
+      
+      .reply-preview {
+        background: #cfd8dc;
+        padding: 5px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9em;
+      }
+      
+      .chat-footer {
+        display: flex;
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #ccc;
+      }
+      
+      #chat-input {
+        flex-grow: 1;
+        min-height: 36px;
+        max-height: 120px;
+        overflow-y: auto;
+        padding: 6px 10px;
+        font-size: 14px;
+        font-family: 'Poppins', sans-serif;
+        resize: none;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        outline: none;
+        line-height: 1.4;
+      }
+      
+      
+      #chat-input:focus {
+        border-color: #2e6f6b;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+      }
+      
+      .send-btn {
+        background: #2e6f6b;
+        color: white;
+        border: none;
+        padding: 10px 16px; /* lebar horizontal lebih besar */
+        margin-left: 10px;
+        font-size: 16px;
+        border-radius: 8px;  /* sudut agak membulat, tapi tidak oval */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .chat-reply-box {
+        background: #f0f0f0;
+        border-left: 3px solid #2e6f6b;;
+        padding: 5px 10px;
+        font-size: 0.85em;
+        color: #555;
+        margin-bottom: 5px;
+      }
+      
+</style>
+</head>
+<body>
+  <header class="chat-header">
+    <div class="avatar" id="avatar">A</div>
+    <div class="user-info">
+      <div id="nama-user">Nama</div>
+      <div id="pondok-user">Pondok Pesantren</div>
+    </div>
+  </header>
+
+  <main id="chat-box" class="chat-box"></main>
+
+  <div id="reply-preview" class="reply-preview" style="display:none;">
+    <span id="reply-text"></span>
+    <button onclick="cancelReply()">×</button>
+  </div>
+
+  <footer class="chat-footer">
+    <textarea id="chat-input" placeholder="Ketik pesan..." oninput="autoResize(this)"></textarea>
+    <button onclick="sendMessage()" class="send-btn">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+        </footer>
+        <script>
+            const USER_API = 'https://script.google.com/macros/s/AKfycbzg7WQM6mZ56PXTfsc189nLK1ZkF9gpzim0MPPfxotFYmyG_JKdioeU8k-08WteLowUIQ/exec';
+const CHAT_API = 'https://script.google.com/macros/s/AKfycbwpqQ9QSAG3jk82PWUnjVRgpjpiAm5LXKONTYStfmxVQo8SOe08596xYw44NRBFj77x5Q/exec';
+
+let currentId = null;
+let currentUser = null;
+let replyTo = null;
+
+window.onload = () => {
+  const params = new URLSearchParams(window.location.search);
+  currentId = params.get("id");
+  if (!currentId) return location.href = "login.html";
+
+  fetch(USER_API, {
+    method: "POST",
+    body: JSON.stringify({ action: "getUser", id: currentId })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "found") {
+        currentUser = data.nama;
+        document.getElementById("nama-user").innerText = data.nama;
+        document.getElementById("pondok-user").innerText = data.pondok;
+        document.getElementById("avatar").innerText = data.nama.charAt(0).toUpperCase();
+        loadMessages();
+      } else {
+        alert("ID tidak ditemukan."); location.href = "login.html";
+      }
+    });
+};
+
+function disableEnter(e) {
+  if (e.key === "Enter") e.preventDefault();
+}
+
+function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (text === "") return;
+
+  const message = {
+    action: "sendMessage",
+    id_user: currentId,
+    nama_user: currentUser,
+    pesan: text,
+    balas: replyTo ? replyTo.pesan : ""
+  };
+
+  fetch(CHAT_API, {
+    method: "POST",
+    body: JSON.stringify(message)
+  })
+    .then(res => res.json())
+    .then(() => {
+      input.value = "";
+      cancelReply();
+      loadMessages();
+    });
+    document.getElementById("chat-input").style.height = "36px"; // reset tinggi textarea
+}
+
+function loadMessages() {
+  fetch(CHAT_API + "?action=getMessages")
+    .then(res => res.json())
+    .then(data => {
+      const box = document.getElementById("chat-box");
+      box.innerHTML = "";
+
+      data.forEach(msg => {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("chat-message");
+        msgDiv.classList.add(msg.id_user === currentId ? "chat-right" : "chat-left");
+        msgDiv.onclick = () => setReply(msg);
+
+        if (msg.balas) {
+          const replyDiv = document.createElement("div");
+          replyDiv.classList.add("chat-reply-box");
+          replyDiv.innerText = `Membalas: "${msg.balas}"`;
+          msgDiv.appendChild(replyDiv);
+        }        
+
+        const textDiv = document.createElement("div");
+        textDiv.innerText = msg.pesan;
+        msgDiv.appendChild(textDiv);
+
+        const meta = document.createElement("div");
+        meta.classList.add("chat-meta");
+        meta.innerText = `${msg.nama_user} • ${msg.timestamp}`;
+        msgDiv.appendChild(meta);
+
+        box.appendChild(msgDiv);
+      });
+
+      box.scrollTop = box.scrollHeight;
+    });
+}
+
+function setReply(msg) {
+  replyTo = msg;
+  document.getElementById("reply-text").innerText = `Membalas: "${msg.pesan}"`;
+  document.getElementById("reply-preview").style.display = "flex";
+}
+
+function cancelReply() {
+  replyTo = null;
+  document.getElementById("reply-preview").style.display = "none";
+}
+function autoResize(textarea) {
+  textarea.style.height = 'auto'; // reset dulu
+  const minHeight = 36; // tinggi minimal
+  textarea.style.height = Math.max(minHeight, textarea.scrollHeight) + 'px';
+}
+        </script>
+</body>
+</html>
