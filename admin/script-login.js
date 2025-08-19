@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzvoJyRVE_rgH_0vxQ3nKGdiqG5DzXxoBdlXNStz_e-Pe_fr6BwXGzLJ7mkaUolOyIc4Q/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzTAbfO_J9sE6g7lXBa9i67otum9z9vEbwzOqNrkApgH8nWoKvZTTZRAndGb4zMA2WeXw/exec";
 
 // 🔁 Auto-login jika ID ditemukan di perangkat Android
 window.onload = function () {
