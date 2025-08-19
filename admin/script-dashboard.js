@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbwd0CVbkpKB59Ph_K1FVY8-nlQj1a6-s-UN0bSOR_D33QS2lqjwqkt8PLmcTJiVfBS6pA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzTAbfO_J9sE6g7lXBa9i67otum9z9vEbwzOqNrkApgH8nWoKvZTTZRAndGb4zMA2WeXw/exec';
 
 window.onload = () => {
   const params = new URLSearchParams(window.location.search);
@@ -46,22 +46,15 @@ function goTo(page) {
   window.location.href = `${page}.html?id=${userId}`;
 }
 
- // Fungsi untuk membuka Google Sheet berdasarkan ID Sheet
- function openSheet(sheetId) {
-const url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
 
-if (typeof AndroidFunction === 'object' && typeof AndroidFunction.openLink === 'function') {
- AndroidFunction.openLink(url);
-} else {
- window.location.href = url;
-}
+// Logout
+function logout() {
+  if (typeof AndroidFunction !== "undefined") {
+    AndroidFunction.logout(); // Hapus ID dari storage Android
+  }
+  window.location.href = "login.html";
 }
 
- // Fungsi tambahan jika ingin membagikan tautan ke aplikasi lain
- function shareToApps(text = "Ini linknya: https://kkfonline.github.io/bm/") {
-   if (window.AndroidFunction?.shareText) {
-     window.AndroidFunction.shareText(text);
-   } else {
-     alert("Fitur berbagi hanya tersedia di dalam aplikasi.");
-   }
- }
+
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get("id");
