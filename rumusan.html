@@ -412,12 +412,7 @@ background:  #21958b;
         if (listOpen) { html += `</${listType}>`; listOpen = false; }
   
         let text = t
-          .replace(/\b(Deskripsi\s*masalah|Pertanyaan|Jawab(?:an)?|Refr?ensi)\s*:?\s*/gi, (m, p1) => {
-            const label = p1.replace(/\s+/g, ' ')
-                            .replace(/jawab$/i, 'Jawaban')
-                            .replace(/refrensi/i, 'Referensi');
-            return `<div class="section-title">${label}:</div>`;
-          })
+          
           .replace(/#(.*?)#/g, '<span class="kitab">$1</span>')
           .replace(/\*(.*?)\*/g, '<span class="syahid">$1</span>');
   
@@ -564,10 +559,8 @@ background:  #21958b;
   }
 
   window.addEventListener('DOMContentLoaded', load);
-  
-
-
 </script>
 
 </body>
+
 </html>
